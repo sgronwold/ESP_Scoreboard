@@ -239,7 +239,7 @@ void displayScore(uint8_t useBaseballFormatting, String teamsURL, String scorebo
       atBat = atBat.substring(atBat.indexOf(' ')+1);
     }
 
-    if(pitcher.length() != 0 && atBat.length() != 0) {
+    if(!pitcher.equals("null") && !atBat.equals("null")) {
       lcd.print(pitcher);
       lcd.print("|");
       lcd.print(atBat);
