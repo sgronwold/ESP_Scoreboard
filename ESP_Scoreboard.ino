@@ -48,69 +48,203 @@ void setup() {
 void loop() {
   nhl_displayScore("ANA");
   delay(5000);
+  nhl_displayScore("SJ");
+  delay(5000);
+  nhl_displayScore("CHI");
+  delay(5000);
+  mlb_displayScore("CHC");
+  delay(5000);
 }
 
 void nhl_displayScore(String tricode) {
-  strcpy(buffer, "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard");
+  // get the gameid for given tricode
+  ("http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/"+tricode).toCharArray(buffer, sizeof(buffer)/sizeof(buffer[0]));
 
   http.begin(buffer);
   int responseCode = http.GET();
-
-  char* response = (char*)calloc(2000000, sizeof(char));
   
-  WiFiClient client = http.getStream();
+  Serial.printf("Response code: %d\n", responseCode);
 
-  while (client.available()){ 
-    int nextch = client.read();
+  char* response = (char*) malloc((http.getSize()+2) * sizeof(char));
 
-    Serial.print(nextch);
-  }
-
-
+  http.getString().toCharArray(response, http.getSize()+2);
 
   http.end();
 
-  Serial.printf("Response code: %d\n", responseCode);
 
   JsonDocument json;
   deserializeJson(json, response);
 
+  char* gameid = (char*) malloc(20 * sizeof(char));
+
+  String gameid_str = json["team"]["nextEvent"][0]["id"];
+  gameid_str.toCharArray(gameid,20);
+
   free(response);
 
-  uint8_t gameIndex;
-  for (gameIndex = 0; gameIndex < 20; gameIndex++) {
-    String homeTricode = json["events"][gameIndex]["competitions"][0]["competitors"][0]["team"]["abbreviation"];
-    if (homeTricode.equals(tricode)) break;
+  sprintf(buffer, "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard/%s", gameid);
+  free(gameid);
 
-    String awayTricode = json["events"][gameIndex]["competitions"][0]["competitors"][1]["team"]["abbreviation"];
-    if (awayTricode.equals(tricode)) break;
-  }
 
-  // if our team doesn't play then we return
-  if (gameIndex == 20) {
-    lcd.clear();
-    return;
-  }
+  // now we've gotten the game id
+  http.begin(buffer);
+  responseCode = http.GET();
+  
+  Serial.printf("Response code: %d\n", responseCode);
 
-  String shortName = json["events"][gameIndex]["shortName"];
+  response = (char*) malloc((http.getSize()+2) * sizeof(char));
 
-  uint8_t awayScore = json["events"][gameIndex]["competitions"][0]["competitors"][1]["score"]["value"];
-  uint8_t homeScore = json["events"][gameIndex]["competitions"][0]["competitors"][0]["score"]["value"];
+  http.getString().toCharArray(response, http.getSize()+2);
 
-  char* displayScore = (char*)calloc(10, sizeof(char));
-  sprintf(displayScore, "%hu - %hu", awayScore, homeScore);
+  http.end();
 
-  String status = json["events"][gameIndex]["competitions"][0]["status"]["type"]["shortDetail"];
+
+  json;
+  deserializeJson(json, response);
+
+  free(response);
+
+
+  // henceforth the game stored in our json is the one we want :)
+
+  String shortName = json["shortName"];
+
+  String awayScore = json["competitions"][0]["competitors"][1]["score"];
+  String homeScore = json["competitions"][0]["competitors"][0]["score"];
+  String score = awayScore + " - " + homeScore;
+
+  String status = json["competitions"][0]["status"]["type"]["shortDetail"];
 
   lcd.clear();
 
   lcd.setCursor((20 - shortName.length()) / 2, 0);
   lcd.print(shortName);
 
-  lcd.setCursor((20 - strlen(displayScore)) / 2, 1);
-  lcd.print(displayScore);
-  free(displayScore);
+  lcd.setCursor((20 - score.length()) / 2, 1);
+  lcd.print(score);
 
   lcd.setCursor((20 - status.length()) / 2, 2);
   lcd.print(status);
+}
+
+
+
+
+void mlb_displayScore(String tricode) {
+  // get the gameid for given tricode
+  ("http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/"+tricode).toCharArray(buffer, sizeof(buffer)/sizeof(buffer[0]));
+
+  http.begin(buffer);
+  int responseCode = http.GET();
+  
+  Serial.printf("Response code: %d\n", responseCode);
+
+  char* response = (char*) malloc((http.getSize()+2) * sizeof(char));
+
+  http.getString().toCharArray(response, http.getSize()+2);
+
+  http.end();
+
+
+  JsonDocument json;
+  deserializeJson(json, response);
+
+  char* gameid = (char*) malloc(20 * sizeof(char));
+
+  String gameid_str = json["team"]["nextEvent"][0]["id"];
+  gameid_str.toCharArray(gameid,20);
+
+  free(response);
+
+  sprintf(buffer, "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard/%s", gameid);
+  free(gameid);
+
+
+  // now we've gotten the game id
+  http.begin(buffer);
+  responseCode = http.GET();
+  
+  Serial.printf("Response code: %d\n", responseCode);
+
+  response = (char*) malloc((http.getSize()+2) * sizeof(char));
+
+  http.getString().toCharArray(response, http.getSize()+2);
+
+  http.end();
+
+
+
+  deserializeJson(json, response);
+
+  free(response);
+
+
+  // henceforth the game stored in our json is the one we want :)
+
+  String shortName = json["shortName"];
+
+  String awayScore = json["competitions"][0]["competitors"][1]["score"];
+  String homeScore = json["competitions"][0]["competitors"][0]["score"];
+  String score = awayScore + " - " + homeScore;
+
+  String status = json["competitions"][0]["status"]["type"]["shortDetail"];
+
+  uint8_t balls = 3;
+  uint8_t strikes = 2;
+  uint8_t outs = 2;
+
+  uint8_t manOnFirst = 1;
+  uint8_t manOnSecond = 1;
+  uint8_t manOnThird = 1;
+
+  lcd.clear();
+
+  lcd.setCursor(10 + (10 - shortName.length()) / 2, 0);
+  lcd.print(shortName);
+
+  lcd.setCursor(10 + (10 - score.length()) / 2, 1);
+  lcd.print(score);
+
+  lcd.setCursor(10 + (10 - status.length()) / 2, 2);
+  lcd.print(status);
+
+  // print num of balls
+  lcd.setCursor(0,0);
+  lcd.print("B ");
+  for(uint8_t i = 0; i < balls; i++) {
+    lcd.print("X");
+  }
+
+  // print num of strikes
+  lcd.setCursor(0,1);
+  lcd.print("S ");
+  for(uint8_t i = 0; i < strikes; i++) {
+    lcd.print("X");
+  }
+
+  // print num of outs
+  lcd.setCursor(0,2);
+  lcd.print("O ");
+  for(uint8_t i = 0; i < outs; i++) {
+    lcd.print("X");
+  }
+
+  // print home plate
+  lcd.setCursor(7,3);
+  lcd.print("*");
+
+  // print first base
+  lcd.setCursor(8,2);
+  if(manOnFirst) lcd.print("*");
+  else lcd.print("O");
+
+  // print second base
+  lcd.setCursor(7,1);
+  if(manOnSecond) lcd.print("*");
+  else lcd.print("O");
+
+  // print third base
+  lcd.setCursor(6,2);
+  if(manOnThird) lcd.print("*");
+  else lcd.print("O");
 }
