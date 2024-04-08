@@ -143,6 +143,15 @@ void displayScore(uint8_t useBaseballFormatting, String teamsURL, String scorebo
 
   String shortName = json["shortName"];
 
+  String shortAwayName = json["competitions"][0]["competitors"][1]["team"]["abbreviation"].as<String>();
+  while(shortAwayName.length() < 4) shortAwayName += " ";
+
+  String shortHomeName = json["competitions"][0]["competitors"][0]["team"]["abbreviation"].as<String>();
+  while(shortHomeName.length() < 4) shortHomeName += " ";
+
+  String longAwayName = json["competitions"][0]["competitors"][1]["team"]["shortDisplayName"].as<String>() + "(" + json["competitions"][0]["competitors"][1]["records"][0]["summary"].as<String>() + ")";
+  String longHomeName = json["competitions"][0]["competitors"][0]["team"]["shortDisplayName"].as<String>() + "(" + json["competitions"][0]["competitors"][0]["records"][0]["summary"].as<String>() + ")";
+
   String awayScore = json["competitions"][0]["competitors"][1]["score"];
   String homeScore = json["competitions"][0]["competitors"][0]["score"];
   String score = awayScore + " - " + homeScore;
@@ -161,63 +170,67 @@ void displayScore(uint8_t useBaseballFormatting, String teamsURL, String scorebo
   lcd.clear();
   if (useBaseballFormatting && !gameStatus.equals("STATUS_SCHEDULED")) {
 
-    lcd.setCursor(10 + (10 - shortName.length()) / 2, 0);
-    lcd.print(shortName);
+    lcd.setCursor(0, 0);
+    lcd.print(shortAwayName + " " + awayScore);
 
-    lcd.setCursor(10 + (10 - score.length()) / 2, 1);
-    lcd.print(score);
+    lcd.setCursor(0, 1);
+    lcd.print(shortHomeName + " " + homeScore);
 
-    lcd.setCursor(10 + (10 - status.length()) / 2, 2);
+
+    lcd.setCursor(0, 2);
     lcd.print(status);
 
     // print num of balls
-    lcd.setCursor(0, 0);
+    lcd.setCursor(8, 0);
     lcd.print("B ");
     for (uint8_t i = 0; i < balls; i++) {
       lcd.print("X");
     }
 
     // print num of strikes
-    lcd.setCursor(0, 1);
+    lcd.setCursor(8, 1);
     lcd.print("S ");
     for (uint8_t i = 0; i < strikes; i++) {
       lcd.print("X");
     }
 
     // print num of outs
-    lcd.setCursor(0, 2);
+    lcd.setCursor(8, 2);
     lcd.print("O ");
     for (uint8_t i = 0; i < outs; i++) {
       lcd.print("X");
     }
 
     // print home plate
-    lcd.setCursor(7, 3);
+    lcd.setCursor(18, 3);
     lcd.print("*");
 
     // print first base
-    lcd.setCursor(8, 2);
+    lcd.setCursor(19, 2);
     if (manOnFirst) lcd.print("*");
     else lcd.print("O");
 
     // print second base
-    lcd.setCursor(7, 1);
+    lcd.setCursor(18, 1);
     if (manOnSecond) lcd.print("*");
     else lcd.print("O");
 
     // print third base
-    lcd.setCursor(6, 2);
+    lcd.setCursor(17, 2);
     if (manOnThird) lcd.print("*");
     else lcd.print("O");
   } else {
 
-    lcd.setCursor((20 - shortName.length()) / 2, 0);
-    lcd.print(shortName);
+    lcd.setCursor((20 - longAwayName.length()) / 2, 0);
+    lcd.print(longAwayName);
 
-    lcd.setCursor((20 - score.length()) / 2, 1);
+    lcd.setCursor((20 - longHomeName.length()) / 2, 1);
+    lcd.print(longHomeName);
+
+    lcd.setCursor((20 - score.length()) / 2, 2);
     lcd.print(score);
 
-    lcd.setCursor((20 - status.length()) / 2, 2);
+    lcd.setCursor((20 - status.length()) / 2, 3);
     lcd.print(status);
   }
 }
