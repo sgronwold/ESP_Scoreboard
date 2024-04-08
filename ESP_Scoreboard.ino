@@ -106,6 +106,8 @@ void displayScore(uint8_t useBaseballFormatting, String teamsURL, String scorebo
 
   http.getString().toCharArray(response, http.getSize() + 2);
 
+  http.end();
+
 
   JsonDocument json;
   deserializeJson(json, response);
@@ -120,7 +122,7 @@ void displayScore(uint8_t useBaseballFormatting, String teamsURL, String scorebo
 
 
   // now we've gotten the game id
-  http.setURL(teamsURL+tricode);
+  http.begin(scoreboardURL+gameid_str);
   responseCode = http.GET();
 
   Serial.printf("Response code: %d\n", responseCode);
