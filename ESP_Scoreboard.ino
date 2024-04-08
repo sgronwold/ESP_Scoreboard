@@ -65,25 +65,33 @@ void loop() {
   // display preferred teams
   JsonArray teamsList = json["ncaab"];
   for (int i = 0; i < teamsList.size(); i++) {
-    String NCAAB_SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard/";
-    String NCAAB_TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/";
-    displayScore(0, NCAAB_TEAMS_URL, NCAAB_SCOREBOARD_URL, teamsList[i].as<String>());
+    String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard/";
+    String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/";
+    displayScore(0, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
+    delay(5000);
+  }
+
+  teamsList = json["nba"];
+  for (int i = 0; i < teamsList.size(); i++) {
+    String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard/";
+    String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/";
+    displayScore(0, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
     delay(5000);
   }
 
   teamsList = json["nhl"];
   for (int i = 0; i < teamsList.size(); i++) {
-    String NHL_SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard/";
-    String NHL_TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/";
-    displayScore(0, NHL_TEAMS_URL, NHL_SCOREBOARD_URL, teamsList[i].as<String>());
+    String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard/";
+    String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/";
+    displayScore(0, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
     delay(5000);
   }
 
   teamsList = json["mlb"];
   for (int i = 0; i < teamsList.size(); i++) {
-    String MLB_SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard/";
-    String MLB_TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/";
-    displayScore(1, MLB_TEAMS_URL, MLB_SCOREBOARD_URL, teamsList[i].as<String>());
+    String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard/";
+    String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/";
+    displayScore(0, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
     delay(5000);
   }
 
@@ -151,6 +159,8 @@ void displayScore(uint8_t useBaseballFormatting, String teamsURL, String scorebo
 
   String longAwayName = json["competitions"][0]["competitors"][1]["team"]["shortDisplayName"].as<String>() + "(" + json["competitions"][0]["competitors"][1]["records"][0]["summary"].as<String>() + ")";
   String longHomeName = json["competitions"][0]["competitors"][0]["team"]["shortDisplayName"].as<String>() + "(" + json["competitions"][0]["competitors"][0]["records"][0]["summary"].as<String>() + ")";
+  longAwayName.replace("Golden Knights", "G. Knights");
+  longHomeName.replace("Golden Knights", "G. Knights");
 
   String awayScore = json["competitions"][0]["competitors"][1]["score"];
   String homeScore = json["competitions"][0]["competitors"][0]["score"];
