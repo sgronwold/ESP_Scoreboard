@@ -57,7 +57,7 @@ void setup() {
 void loop() {
   HTTPClient http;
   // get preferred teams
-  strcpy(buffer, "https://sgronwold.xyz/api/preferred-teams.json");
+  strcpy(buffer, "https://drive.google.com/uc?export=download&id=1x9woXu0UNHdooMS4Z1qxCHMMPEdN4kyj");
   http.begin(buffer);
   http.GET();
 
