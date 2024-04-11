@@ -123,6 +123,7 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   int responseCode = http.GET();
 
   Serial.printf("Response code: %d\n", responseCode);
+  if(responseCode != 200) return;
 
   char* response = (char*)malloc((http.getSize() + 2) * sizeof(char));
 
@@ -148,6 +149,7 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   responseCode = http.GET();
 
   Serial.printf("Response code: %d\n", responseCode);
+  if(responseCode != 200) return;
 
   response = (char*)malloc((http.getSize() + 2) * sizeof(char));
 
