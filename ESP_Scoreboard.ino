@@ -28,7 +28,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 // end lcd stuff
 
-char buffer[200];
+char buffer[1000];
 
 
 void setup() {
@@ -57,17 +57,20 @@ void setup() {
 void loop() {
   HTTPClient http;
   // get preferred teams
-  strcpy(buffer, "https://drive.google.com/uc?export=download&id=1x9woXu0UNHdooMS4Z1qxCHMMPEdN4kyj");
+  strcpy(buffer, "https://script.google.com/macros/s/AKfycbyoKpL1jsUBxsbQjMmXjrb1ST6RlBLxSuEget8oTJ9bp1OIoRBBRmo-OcUIBGs1BroV/exec");
   http.begin(buffer);
-  http.GET();
 
-  char* payload = (char*)malloc(http.getSize() + 1 * sizeof(char));
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
 
-  http.getString().toCharArray(payload, http.getSize() + 1);
+  int responseCode = http.GET();
+
+  Serial.printf("Response code %d\n", responseCode);
+
+  String payload = http.getString();
 
   JsonDocument json;
   deserializeJson(json, payload);
-  free(payload);
 
   http.end();
 
