@@ -10,11 +10,11 @@
 
 #include <ArduinoJson.h>
 
-#define TOP_LCD_SDA 27
-#define TOP_LCD_SCL 26
+#define TOP_LCD_SDA 18
+#define TOP_LCD_SCL 19
 
-#define BOT_LCD_SDA 18
-#define BOT_LCD_SCL 19
+#define BOT_LCD_SDA 27
+#define BOT_LCD_SCL 26
 
 const char* ssid = "valpo-media";
 const char* password = "brownandgold";
