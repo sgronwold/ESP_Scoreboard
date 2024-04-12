@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <Wire.h>
 
 // we have a very long json file so we need to up the recursion limit
 #define ARDUINOJSON_DEFAULT_NESTING_LIMIT 65535
@@ -8,6 +9,12 @@
 #define ARDUINOJSON_ENABLE_COMMENTS 1
 
 #include <ArduinoJson.h>
+
+#define TOP_LCD_SDA 27
+#define TOP_LCD_SCL 26
+
+#define BOT_LCD_SDA 18
+#define BOT_LCD_SCL 19
 
 const char* ssid = "valpo-media";
 const char* password = "brownandgold";
@@ -32,6 +39,17 @@ char buffer[1000];
 
 
 void setup() {
+  topLCD();
+
+  lcd.init();
+  lcd.backlight();
+
+  botLCD();
+
+  lcd.init();
+  lcd.backlight();
+
+
   Serial.begin(115200);
 
   Serial.print("MAC Address: ");
@@ -49,9 +67,6 @@ void setup() {
   Serial.println("\nConnected to the WiFi network");
   Serial.print("Local ESP32 IP: ");
   Serial.println(WiFi.localIP());
-
-  lcd.init();
-  lcd.backlight();
 }
 
 void loop() {
@@ -81,38 +96,41 @@ void loop() {
   for (int i = 0; i < teamsList.size(); i++) {
     String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard/";
     String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/";
-    displayScore(NCAAB, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
-    delay(5000);
+    if(displayScore(NCAAB, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>())) delay(5000);
   }
 
   teamsList = json["nba"];
   for (int i = 0; i < teamsList.size(); i++) {
     String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard/";
     String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/";
-    displayScore(NBA, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
-    delay(5000);
+    if(displayScore(NBA, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>())) delay(5000);
   }
 
   teamsList = json["nhl"];
   for (int i = 0; i < teamsList.size(); i++) {
     String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard/";
     String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/";
-    displayScore(NHL, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
-    delay(5000);
+    if(displayScore(NHL, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>())) delay(5000);
   }
 
   teamsList = json["mlb"];
   for (int i = 0; i < teamsList.size(); i++) {
     String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard/";
     String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/";
-    displayScore(MLB, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>());
-    delay(5000);
+    if(displayScore(MLB, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>())) delay(5000);
+  }
+
+  teamsList = json["nfl"];
+  for (int i = 0; i < teamsList.size(); i++) {
+    String SCOREBOARD_URL = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/";
+    String TEAMS_URL = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/";
+    if(displayScore(NFL, TEAMS_URL, SCOREBOARD_URL, teamsList[i].as<String>())) delay(5000);
   }
 
   free(team);
 }
 
-void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String tricode) {
+uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String tricode) {
   HTTPClient http;
   
   // get the gameid for given tricode)
@@ -123,7 +141,7 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   int responseCode = http.GET();
 
   Serial.printf("Response code: %d\n", responseCode);
-  if(responseCode != 200) return;
+  if(responseCode != 200) return 0;
 
   char* response = (char*)malloc((http.getSize() + 2) * sizeof(char));
 
@@ -149,7 +167,7 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   responseCode = http.GET();
 
   Serial.printf("Response code: %d\n", responseCode);
-  if(responseCode != 200) return;
+  if(responseCode != 200) return 0;
 
   response = (char*)malloc((http.getSize() + 2) * sizeof(char));
 
@@ -184,6 +202,10 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   String status = json["competitions"][0]["status"]["type"]["shortDetail"];
   String gameStatus = json["competitions"][0]["status"]["type"]["name"];
 
+  String lastPlayType = json["competitions"][0]["situation"]["lastPlay"]["type"]["abbreviation"];
+  JsonArray athletesInvolved = json["competitions"][0]["situation"]["lastPlay"]["athletesInvolved"];
+
+  // baseball stuff
   uint8_t balls = json["competitions"][0]["situation"]["balls"];
   uint8_t strikes = json["competitions"][0]["situation"]["strikes"];
   uint8_t outs = json["competitions"][0]["situation"]["outs"];
@@ -191,12 +213,17 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   uint8_t manOnSecond = json["competitions"][0]["situation"]["onSecond"];
   uint8_t manOnThird = json["competitions"][0]["situation"]["onThird"];
 
+
+  // hockey stuff
   double awaySavePct = json["competitions"][0]["competitors"][1]["statistics"][1]["displayValue"];
   double homeSavePct = json["competitions"][0]["competitors"][0]["statistics"][1]["displayValue"];
 
-  String lastPlayType = json["competitions"][0]["situation"]["lastPlay"]["type"]["abbreviation"];
-  JsonArray athletesInvolved = json["competitions"][0]["situation"]["lastPlay"]["athletesInvolved"];
-  
+  uint8_t awaySaves = json["competitions"][0]["competitors"][1]["statistics"][0]["displayValue"];
+  uint8_t homeSaves = json["competitions"][0]["competitors"][0]["statistics"][0]["displayValue"];
+
+  String startingGoalieAway = json["competitions"][0]["competitors"][1]["probables"][0]["shortName"];
+  String startingGoalieHome = json["competitions"][0]["competitors"][0]["probables"][0]["shortName"];
+
   String lastPlayPlayers = "";
   for(int i = 0; i < athletesInvolved.size(); i++) {
     lastPlayPlayers += athletesInvolved[i]["shortName"].as<String>() + ", ";
@@ -211,8 +238,13 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
   uint8_t period = json["competitions"][0]["status"]["period"];
   String clock = json["competitions"][0]["status"]["displayClock"];
 
+
+  topLCD();
+  lcd.clear();
+  botLCD();
   lcd.clear();
   if (league == MLB && gameStatus.equals("STATUS_IN_PROGRESS")) {
+    topLCD();
 
     lcd.setCursor(0, 0);
     lcd.print(shortAwayName + " " + awayScore);
@@ -275,15 +307,13 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
       lcd.print("|");
       lcd.print(atBat.substring(0, 19-pitcher.length()));
     }
-  } else if (league == NHL && gameStatus.equals("STATUS_IN_PROGRESS")) {
+  } else if ((league == NHL) && gameStatus.equals("STATUS_IN_PROGRESS")) {
+    topLCD();
     lcd.setCursor(0, 0);
     lcd.print(shortAwayName);
 
     lcd.setCursor(3, 0);
-    sprintf(buffer, "%2hu", awayScore);
-    lcd.print(buffer);
-
-    sprintf(buffer, " %.3fSV%%", awaySavePct);
+    sprintf(buffer, "%2hu %2huSV", awayScore, awaySaves);
     lcd.print(buffer);
 
     lcd.setCursor(0, 1);
@@ -293,24 +323,75 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
     sprintf(buffer, "%2hu", homeScore);
     lcd.print(buffer);
 
-    sprintf(buffer, " %.3fSV%%", homeSavePct);
+    lcd.setCursor(3, 1);
+    sprintf(buffer, "%2hu %2huSV", homeScore, homeSaves);
+    lcd.print(buffer);
+
+    lcd.setCursor(11,0);
+    sprintf(buffer, "Per%2hu", period);
+    lcd.print(buffer);
+
+    lcd.setCursor(11,1);
+    lcd.print(clock);
+
+    if(!lastPlay.equals("null")) {
+      botLCD();
+
+      lcd.setCursor(0, 0);
+      lcd.print(lastPlay.substring(0,20));
+
+      lcd.setCursor(0, 1);
+      lcd.print(lastPlay.substring(20, 40));
+
+      lcd.setCursor(0, 2);
+      lcd.print(lastPlay.substring(40, 60));
+
+      lcd.setCursor(0, 3);
+      lcd.print(lastPlay.substring(60, 80));
+    }
+
+    lcd.setCursor(0,2);
+
+  } else if ((league == NBA) && gameStatus.equals("STATUS_IN_PROGRESS")) {
+    topLCD();
+    lcd.setCursor(0, 0);
+    lcd.print(shortAwayName);
+
+    lcd.setCursor(3, 0);
+    sprintf(buffer, "%3hu", awayScore);
+    lcd.print(buffer);
+
+    lcd.setCursor(0, 1);
+    lcd.print(shortHomeName);
+
+    lcd.setCursor(3, 1);
+    sprintf(buffer, "%3hu", homeScore);
     lcd.print(buffer);
 
     lcd.setCursor(15,0);
-    sprintf(buffer, "Per%2hu", period);
+    sprintf(buffer, "Qtr%2hu", period);
     lcd.print(buffer);
 
     lcd.setCursor(15,1);
     lcd.print(clock);
 
     if(!lastPlay.equals("null")) {
-      lcd.setCursor(0, 2);
+      botLCD();
+
+      lcd.setCursor(0, 0);
       lcd.print(lastPlay.substring(0,20));
 
-      lcd.setCursor(0, 3);
+      lcd.setCursor(0, 1);
       lcd.print(lastPlay.substring(20, 40));
+
+      lcd.setCursor(0, 2);
+      lcd.print(lastPlay.substring(40, 60));
+
+      lcd.setCursor(0, 3);
+      lcd.print(lastPlay.substring(60, 80));
     }
   } else {
+    topLCD();
     lcd.setCursor((20 - longAwayName.length()) / 2, 0);
     lcd.print(longAwayName);
 
@@ -324,4 +405,20 @@ void displayScore(LEAGUE league, String teamsURL, String scoreboardURL, String t
     lcd.setCursor((20 - status.length()) / 2, 3);
     lcd.print(status);
   }
+
+  return 1;
+}
+
+void botLCD() {
+  pinMode(TOP_LCD_SDA, OUTPUT);
+  pinMode(TOP_LCD_SCL, OUTPUT);
+  Wire.end();
+  Wire.begin(BOT_LCD_SDA, BOT_LCD_SCL);
+}
+
+void topLCD() {
+  pinMode(BOT_LCD_SDA, OUTPUT);
+  pinMode(BOT_LCD_SCL, OUTPUT);
+  Wire.end();
+  Wire.begin(TOP_LCD_SDA, TOP_LCD_SCL);
 }
