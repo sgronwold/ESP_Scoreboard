@@ -233,7 +233,12 @@ uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, Strin
   String lastPlay = json["competitions"][0]["situation"]["lastPlay"]["text"];
 
   String atBat = json["competitions"][0]["situation"]["batter"]["athlete"]["shortName"];
+  String atBatSummary = json["competitions"][0]["situation"]["batter"]["summary"];
+  atBatSummary.replace(" ", "");
+
   String pitcher = json["competitions"][0]["situation"]["pitcher"]["athlete"]["shortName"];
+  String pitcherSummary = json["competitions"][0]["situation"]["pitcher"]["summary"];
+  pitcherSummary.replace(" ", "");
 
   uint8_t period = json["competitions"][0]["status"]["period"];
   String clock = json["competitions"][0]["status"]["displayClock"];
@@ -307,13 +312,34 @@ uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, Strin
       lcd.print("|");
       lcd.print(atBat.substring(0, 19-pitcher.length()));
     }
+
+    botLCD();
+    if(pitcherSummary != "null") {
+      lcd.setCursor(0,0);
+      lcd.print(pitcherSummary);
+    }
+
+    if(atBatSummary != "null") {
+      lcd.setCursor(0,1);
+      lcd.print(atBatSummary);
+    }
+
+    if(lastPlay != "null") {
+
+      lcd.setCursor(0,2);
+      lcd.print(lastPlay.substring(0,20));
+    
+      lcd.setCursor(0,3);
+      lcd.print(lastPlay.substring(20,40));
+    }
+
   } else if ((league == NHL) && gameStatus.equals("STATUS_IN_PROGRESS")) {
     topLCD();
     lcd.setCursor(0, 0);
     lcd.print(shortAwayName);
 
     lcd.setCursor(3, 0);
-    sprintf(buffer, "%2hu %2huSV", awayScore, awaySaves);
+    sprintf(buffer, "%2hu", awayScore);
     lcd.print(buffer);
 
     lcd.setCursor(0, 1);
@@ -324,15 +350,20 @@ uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, Strin
     lcd.print(buffer);
 
     lcd.setCursor(3, 1);
-    sprintf(buffer, "%2hu %2huSV", homeScore, homeSaves);
+    sprintf(buffer, "%2hu", homeScore);
     lcd.print(buffer);
 
-    lcd.setCursor(11,0);
+    lcd.setCursor(7,0);
     sprintf(buffer, "Per%2hu", period);
     lcd.print(buffer);
 
-    lcd.setCursor(11,1);
+    lcd.setCursor(7,1);
     lcd.print(clock);
+
+    lcd.setCursor(0,2);
+    lcd.print(longAwayName);
+    lcd.setCursor(0,3);
+    lcd.print(longHomeName);
 
     if(!lastPlay.equals("null")) {
       botLCD();
@@ -350,8 +381,6 @@ uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, Strin
       lcd.print(lastPlay.substring(60, 80));
     }
 
-    lcd.setCursor(0,2);
-
   } else if ((league == NBA) && gameStatus.equals("STATUS_IN_PROGRESS")) {
     topLCD();
     lcd.setCursor(0, 0);
@@ -368,12 +397,17 @@ uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, Strin
     sprintf(buffer, "%3hu", homeScore);
     lcd.print(buffer);
 
-    lcd.setCursor(15,0);
+    lcd.setCursor(8,0);
     sprintf(buffer, "Qtr%2hu", period);
     lcd.print(buffer);
 
-    lcd.setCursor(15,1);
+    lcd.setCursor(8,1);
     lcd.print(clock);
+
+    lcd.setCursor(0,2);
+    lcd.print(longAwayName);
+    lcd.setCursor(0,3);
+    lcd.print(longHomeName);
 
     if(!lastPlay.equals("null")) {
       botLCD();
