@@ -16,8 +16,8 @@
 #define BOT_LCD_SDA 18
 #define BOT_LCD_SCL 19
 
-const char* ssid = "valpo-media";
-const char* password = "brownandgold";
+const char* ssid = "valpo-guest";
+const char* password = "forevervalpo";
 
 enum LEAGUE {
   NHL,
