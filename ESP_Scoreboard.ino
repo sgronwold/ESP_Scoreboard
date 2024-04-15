@@ -59,6 +59,22 @@ void setup() {
   WiFi.begin(ssid, password);
   Serial.println("\nConnecting");
 
+  topLCD();
+  
+  lcd.setCursor(0,0);
+  lcd.print("SSID:");
+  lcd.setCursor(0,1);
+  sprintf(buffer, "%s", ssid);
+  lcd.print(buffer);
+
+  lcd.setCursor(0,2);
+  lcd.print("Password:");
+  lcd.setCursor(0,3);
+  sprintf(buffer, "%s", password);
+  lcd.print(buffer);
+
+  
+
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(100);
