@@ -16,8 +16,8 @@
 #define BOT_LCD_SDA 27
 #define BOT_LCD_SCL 26
 
-const char* ssid = "valpo-guest";
-const char* password = "forevervalpo";
+const char* ssid = "sjohn75";
+const char* password = "Trinity60148";
 
 enum LEAGUE {
   NHL,
@@ -210,7 +210,9 @@ uint8_t displayScore(LEAGUE league, String teamsURL, String scoreboardURL, Strin
   String longAwayName = json["competitions"][0]["competitors"][1]["team"]["shortDisplayName"].as<String>() + "(" + json["competitions"][0]["competitors"][1]["records"][0]["summary"].as<String>() + ")";
   String longHomeName = json["competitions"][0]["competitors"][0]["team"]["shortDisplayName"].as<String>() + "(" + json["competitions"][0]["competitors"][0]["records"][0]["summary"].as<String>() + ")";
   longAwayName.replace("Golden Knights", "G. Knights");
+  longAwayName.replace("Maple Leafs", "M. Leafs");
   longHomeName.replace("Golden Knights", "G. Knights");
+  longHomeName.replace("Maple Leafs", "M. Leafs");
 
   uint8_t awayScore = json["competitions"][0]["competitors"][1]["score"];
   uint8_t homeScore = json["competitions"][0]["competitors"][0]["score"];
